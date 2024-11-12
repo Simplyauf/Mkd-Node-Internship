@@ -1,0 +1,14 @@
+extends layout
+
+block content
+  h1 Import Transactions
+  form(action="/api/v1/import" method="post" enctype="multipart/form-data")
+    input(type="file" name="file" accept=".csv,.xlsx")
+    button(type="submit") Import File
+  
+  if errors
+    .errors
+      h2 Import Errors:
+      ul
+        each error in errors
+          li= error 
