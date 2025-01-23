@@ -1,0 +1,30 @@
+extends layout
+
+block content
+  .container.mt-4
+    .row
+      if products && products.length
+        each product in products
+          .col-md-4.mb-4
+            .card
+              if product.image && product.image.src
+                img.card-img-top(src=product.image.src alt=product.title)
+              .card-body
+                h5.card-title= product.title
+                if product.variants && product.variants[0]
+                  p.card-text.text-primary $#{product.variants[0].price}
+      else
+        .col-12
+          p.text-center No products found.
+    
+    .row.mt-4
+      .col-12.text-center
+        nav
+          ul.pagination.justify-content-center
+            if currentPage > 1
+              li.page-item
+                a.page-link(href=`/products?page=${currentPage - 1}&limit=${limit}`) Previous
+            li.page-item
+              span.page-link Page #{currentPage}
+            li.page-item
+              a.page-link(href=`/products?page=${currentPage + 1}&limit=${limit}`) Next 

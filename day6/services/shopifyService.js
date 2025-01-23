@@ -1,9 +1,12 @@
 const axios = require("axios");
-const shopifyUrl = "https://65c3c809c002379e3a0ea04aeaf2cf84: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@roving-house.myshopify.com";
+const shopifyUrl =
+  "https://65c3c809c002379e3a0ea04aeaf2cf84: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@roving-house.myshopify.com";
 const graphQlUrl = `${shopifyUrl}/admin/api/2021-07/graphql.json`;
 
 async function getUnFulfilledOrders() {
-  const orders = await axios.get(`${shopifyUrl}/admin/api/2021-07/orders.json?fulfillment_status=unfulfilled&limit=250`);
+  const orders = await axios.get(
+    `${shopifyUrl}/admin/api/2021-07/orders.json?fulfillment_status=unfulfilled&limit=250`
+  );
 
   const orderIds = orders?.data?.orders.map((order, index) => ({
     sys_index: index,
@@ -11,18 +14,25 @@ async function getUnFulfilledOrders() {
     customer_id: order.customer.id,
     email: order.email,
     customer_name:
-      (order.customer.first_name && order.customer.first_name.length > 0 ? order.customer.first_name : "") +
+      (order.customer.first_name && order.customer.first_name.length > 0
+        ? order.customer.first_name
+        : "") +
       " " +
-      (order.customer.last_name && order.customer.last_name.length > 0 ? order.customer.last_name : ""),
+      (order.customer.last_name && order.customer.last_name.length > 0
+        ? order.customer.last_name
+        : ""),
     line_items: order.line_items,
-    year_month: order.created_at.split("-")[0] + "-" + order.created_at.split("-")[1],
+    year_month:
+      order.created_at.split("-")[0] + "-" + order.created_at.split("-")[1],
     created_at: order.created_at.split("T")[0],
   }));
   return orderIds;
 }
 
 async function getOrderSingle(orderId) {
-  return await axios.get(`${shopifyUrl}/admin/api/2021-07/orders/${orderId}.json`);
+  return await axios.get(
+    `${shopifyUrl}/admin/api/2021-07/orders/${orderId}.json`
+  );
 }
 
 async function getOrderSingleLineItems(orderId) {
@@ -42,7 +52,9 @@ async function getOrderSingleCreatedAt(orderId) {
 }
 
 async function getCustomerById(customerId) {
-  return await axios.get(`${shopifyUrl}/admin/api/2021-07/customers/${customerId}.json`);
+  return await axios.get(
+    `${shopifyUrl}/admin/api/2021-07/customers/${customerId}.json`
+  );
 }
 
 async function getCustomerLastOrderId(customerId) {
@@ -57,21 +69,27 @@ async function getCustomerLastOrderDate(customerId) {
 }
 
 async function getProductById(productId) {
-  return await axios.get(`${shopifyUrl}/admin/api/2021-07/products/${productId}.json`);
+  return await axios.get(
+    `${shopifyUrl}/admin/api/2021-07/products/${productId}.json`
+  );
 }
 
 async function getProductByTitle(title) {
   // console.log(title);
   title = JSON.stringify(title);
   // console.log(title);
-  return await axios.get(`${shopifyUrl}/admin/api/2021-07/products.json?title=${title}`);
+  return await axios.get(
+    `${shopifyUrl}/admin/api/2021-07/products.json?title=${title}`
+  );
 }
 
 // adds product to order by quantity of 1 and price in USD
 async function addItemToOrder(orderId, rewardVariantId, note = "Reward Item") {
   try {
     if (!rewardVariantId) {
-      console.log("addItemToOrder Error: parameter->productItem must have a variantId to be added to order");
+      console.log(
+        "addItemToOrder Error: parameter->productItem must have a variantId to be added to order"
+      );
       return;
     }
 
@@ -96,7 +114,8 @@ async function addItemToOrder(orderId, rewardVariantId, note = "Reward Item") {
     if (beginEditResponse.data.errors && beginEditResponse.data.errors.length) {
       throw beginEditResponse.data.errors;
     }
-    const calculatedOrderId = beginEditResponse.data.orderEditBegin.calculatedOrder.id;
+    const calculatedOrderId =
+      beginEditResponse.data.orderEditBegin.calculatedOrder.id;
     // add item to order mutation
     const addItemQuery = `mutation {
       orderEditAddVariant (id: "${calculatedOrderId}", variantId: "gid://shopify/ProductVariant/${rewardVariantId}", quantity: 1, allowDuplicates: false){
@@ -149,6 +168,36 @@ async function addItemToOrder(orderId, rewardVariantId, note = "Reward Item") {
   }
 }
 
+async function getAllCustomers() {
+  const command = `curl -X GET "${shopifyUrl}/admin/api/2021-07/customers.json" \
+    -H "Content-Type: application/json"`;
+
+  return new Promise((resolve, reject) => {
+    require("child_process").exec(command, (error, stdout, stderr) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+      resolve(JSON.parse(stdout).customers);
+    });
+  });
+}
+
+async function getProducts(page = 1, limit = 10) {
+  const command = `curl -X GET "${shopifyUrl}/admin/api/2021-07/products.json?limit=${limit}&page=${page}" \
+    -H "Content-Type: application/json"`;
+
+  return new Promise((resolve, reject) => {
+    require("child_process").exec(command, (error, stdout, stderr) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+      resolve(JSON.parse(stdout).products);
+    });
+  });
+}
+
 module.exports = {
   shopifyUrl,
   graphQlUrl,
@@ -162,5 +211,7 @@ module.exports = {
   getProductById,
   getProductByTitle,
   getOrderSingleLineItems,
-  getCustomersLastOrdersLineItems
+  getCustomersLastOrdersLineItems,
+  getAllCustomers,
+  getProducts,
 };
