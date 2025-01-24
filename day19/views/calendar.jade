@@ -1,0 +1,137 @@
+extends layout
+
+block content
+  .max-w-4xl.mx-auto.p-6
+    h1.text-3xl.font-bold.mb-8 Appointment Calendar
+
+    .bg-white.rounded-lg.shadow.p-6.mb-6
+      .mb-4
+        label.block.text-gray-700.mb-2 Select Date:
+        input#datePicker.border.rounded.p-2(type="date")
+
+      #weekGrid.grid.grid-cols-5.gap-4.mb-6
+        //- Week days will be populated here
+
+      #timeSlots.hidden
+        h2.text-xl.font-semibold.mb-4 Available Time Slots
+        #availableSlots.grid.grid-cols-4.gap-3
+          //- Time slots will be populated here
+
+      #weekendMessage.hidden.text-red-600.p-4.bg-red-50.rounded
+        | No appointments available on weekends. Please select a weekday.
+
+    #bookingForm.hidden.bg-white.rounded-lg.shadow.p-6
+      h2.text-xl.font-semibold.mb-4 Book Appointment
+      form#appointmentForm.space-y-4
+        input#selectedDateTime(type="hidden" name="startTime")
+        
+        div
+          label.block.text-gray-700.mb-2 Name:
+          input.w-full.border.rounded.p-2(type="text" name="clientName" required)
+
+        div
+          label.block.text-gray-700.mb-2 Email:
+          input.w-full.border.rounded.p-2(type="email" name="clientEmail" required)
+
+        button(type="submit").bg-blue-500.text-white.px-4.py-2.rounded.hover_bg-blue-600
+          | Book Appointment
+
+block scripts
+  script(src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js")
+  script.
+    document.addEventListener('DOMContentLoaded', function() {
+      const datePicker = document.getElementById('datePicker');
+      const weekGrid = document.getElementById('weekGrid');
+      const timeSlots = document.getElementById('timeSlots');
+      const weekendMessage = document.getElementById('weekendMessage');
+      const bookingForm = document.getElementById('bookingForm');
+      const appointmentForm = document.getElementById('appointmentForm');
+
+      // Set minimum date to tomorrow
+      const tomorrow = moment().add(1, 'day').format('YYYY-MM-DD');
+      datePicker.min = tomorrow;
+      datePicker.value = tomorrow;
+
+      async function loadAvailableSlots(date) {
+        try {
+          const response = await fetch(`/api/v1/booked?date=${date}`);
+          const data = await response.json();
+
+          timeSlots.classList.remove('hidden');
+          const slotsContainer = document.getElementById('availableSlots');
+          slotsContainer.innerHTML = '';
+
+          if (data.isWeekend) {
+            weekendMessage.classList.remove('hidden');
+            timeSlots.classList.add('hidden');
+            return;
+          }
+
+          weekendMessage.classList.add('hidden');
+
+          data.availableSlots.forEach(slot => {
+            const slotButton = document.createElement('button');
+            slotButton.type = 'button';
+            slotButton.className = 'p-3 border rounded text-center hover:bg-gray-50';
+            slotButton.textContent = moment(slot.startTime).format('h:mm A');
+            
+            slotButton.onclick = () => {
+              document.querySelectorAll('#availableSlots button').forEach(btn => 
+                btn.classList.remove('bg-blue-500', 'text-white'));
+              slotButton.classList.add('bg-blue-500', 'text-white');
+              
+              document.getElementById('selectedDateTime').value = slot.startTime;
+              bookingForm.classList.remove('hidden');
+            };
+
+            slotsContainer.appendChild(slotButton);
+          });
+        } catch (error) {
+          console.error('Error loading slots:', error);
+        }
+      }
+
+      datePicker.addEventListener('change', () => {
+        loadAvailableSlots(datePicker.value);
+        bookingForm.classList.add('hidden');
+      });
+
+      appointmentForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(appointmentForm);
+        const startTime = formData.get('startTime');
+        const endTime = moment(startTime).add(30, 'minutes').toISOString();
+
+        try {
+          const response = await fetch('/api/v1/schedule', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              startTime,
+              endTime,
+              clientName: formData.get('clientName'),
+              clientEmail: formData.get('clientEmail')
+            })
+          });
+
+          if (response.ok) {
+            alert('Appointment booked successfully!');
+            location.reload();
+          } else {
+            const error = await response.json();
+            alert(error.error || 'Failed to book appointment');
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          alert('An error occurred while booking the appointment');
+        }
+      });
+
+      // Load initial slots
+      loadAvailableSlots(tomorrow);
+    });
+
+block styles
+  script(src="https://cdn.tailwindcss.com")

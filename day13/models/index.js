@@ -1,59 +1,40 @@
-'use strict';
-/*Powered By: Manaknightdigital Inc. https://manaknightdigital.com/ Year: 2020*/
-/**
- * Sequelize File
- * @copyright 2020 Manaknightdigital Inc.
- * @link https://manaknightdigital.com
- * @license Proprietary Software licensing
- * @author Ryan Wong
- *
- */
-const fs = require('fs');
-const path = require('path');
-let Sequelize = require('sequelize');
+"use strict";
+
+const fs = require("fs");
+const path = require("path");
+const Sequelize = require("sequelize");
+const process = require("process");
 const basename = path.basename(__filename);
-const { DataTypes } = require('sequelize');
-const config = {
-  DB_DATABASE: 'mysql',
-  DB_USERNAME: 'root',
-  DB_PASSWORD: 'root',
-  DB_ADAPTER: 'mysql',
-  DB_NAME: 'day_1',
-  DB_HOSTNAME: 'localhost',
-  DB_PORT: 3306,
-};
+const env = process.env.NODE_ENV || "development";
+const config = require(__dirname + "/../config/config.json")[env];
+const db = {};
 
-let db = {};
-
-let sequelize = new Sequelize(config.DB_DATABASE, config.DB_USERNAME, config.DB_PASSWORD, {
-  dialect: config.DB_ADAPTER,
-  username: config.DB_USERNAME,
-  password: config.DB_PASSWORD,
-  database: config.DB_NAME,
-  host: config.DB_HOSTNAME,
-  port: config.DB_PORT,
-  logging: console.log,
-  timezone: '-04:00',
-  pool: {
-    maxConnections: 1,
-    minConnections: 0,
-    maxIdleTime: 100,
-  },
-  define: {
-    timestamps: false,
-    underscoredAll: true,
-    underscored: true,
-  },
-});
-
-// sequelize.sync({ force: true });
+let sequelize;
+if (config.use_env_variable) {
+  sequelize = new Sequelize(process.env[config.use_env_variable], config);
+} else {
+  sequelize = new Sequelize(
+    config.database,
+    config.username,
+    config.password,
+    config
+  );
+}
 
 fs.readdirSync(__dirname)
   .filter((file) => {
-    return file.indexOf('.') !== 0 && file !== basename && file.slice(-3) === '.js';
+    return (
+      file.indexOf(".") !== 0 &&
+      file !== basename &&
+      file.slice(-3) === ".js" &&
+      file.indexOf(".test.js") === -1
+    );
   })
   .forEach((file) => {
-    var model = require(path.join(__dirname, file))(sequelize, DataTypes);
+    const model = require(path.join(__dirname, file))(
+      sequelize,
+      Sequelize.DataTypes
+    );
     db[model.name] = model;
   });
 
@@ -62,6 +43,15 @@ Object.keys(db).forEach((modelName) => {
     db[modelName].associate(db);
   }
 });
+
+sequelize
+  .sync({ force: true })
+  .then(() => {
+    console.log("Tables synchronized");
+  })
+  .catch((err) => {
+    console.error("Error synchronizing tables:", err);
+  });
 
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;

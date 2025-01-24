@@ -1,0 +1,66 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.menu {
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  background: #f0f0f0;
+}
+
+.workspace {
+  display: flex;
+  flex: 1;
+}
+
+.side-panel {
+  width: 250px;
+  background: #f5f5f5;
+  padding: 15px;
+}
+
+.panel {
+  display: none;
+}
+
+.panel.active {
+  display: block;
+}
+
+.color-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.color-box {
+  width: 100px;
+  height: 100px;
+  cursor: pointer;
+}
+
+.image-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.image-grid img {
+  width: 100%;
+  cursor: pointer;
+}
+
+.canvas-container {
+  flex: 1;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#canvas {
+  border: 1px solid #ccc;
+  margin-bottom: 20px;
+}

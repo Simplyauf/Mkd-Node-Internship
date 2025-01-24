@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fabric.js Editor</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="menu">
+        <button class="menu-btn" data-panel="background">Background</button>
+        <button class="menu-btn" data-panel="text">Text</button>
+        <button class="menu-btn" data-panel="image">Image</button>
+      </div>
+
+      <div class="workspace">
+        <div class="side-panel">
+          <!-- Panels will be dynamically populated -->
+          <div id="background-panel" class="panel">
+            <div class="color-grid"></div>
+          </div>
+
+          <div id="text-panel" class="panel">
+            <button data-text="h1">Heading 1</button>
+            <button data-text="h6">Heading 6</button>
+            <button data-text="p">Paragraph</button>
+            <select id="font-size">
+              <option value="60">60</option>
+              <!-- Add more options as needed -->
+            </select>
+          </div>
+
+          <div id="image-panel" class="panel">
+            <div class="image-grid"></div>
+          </div>
+        </div>
+
+        <div class="canvas-container">
+          <canvas id="canvas"></canvas>
+          <button id="download">Download</button>
+        </div>
+      </div>
+    </div>
+    <script src="js/main.js"></script>
+  </body>
+</html>
