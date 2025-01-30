@@ -5,16 +5,16 @@ const { Op } = require("sequelize");
 
 /* GET home page. */
 router.get("/", function (req, res, next) {
-  res.render("index", { title: "Express" });
+  res.redirect("/calendar");
 });
 
 /* GET calendar page. */
 router.get("/calendar", function (req, res, next) {
-  res.render("calendar");
+  res.render("calendar", { title: "Schedule Appointment" });
 });
 
 router.get("/success", function (req, res, next) {
-  res.render("success");
+  res.render("success", { title: "Booking Confirmed" });
 });
 /* GET available time slots */
 router.get("/api/available-slots", async function (req, res) {

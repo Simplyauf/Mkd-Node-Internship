@@ -10,79 +10,92 @@ const buildFilter = (query) => {
   const filters = Array.isArray(query.filter) ? query.filter : [query.filter];
 
   filters.forEach((f) => {
-    const [field, operator, ...values] = f.split(",");
+    const [fieldPath, operator, ...values] = f.split(",");
     let value = values.join(",");
+
+    const fieldParts = fieldPath.split(".");
+    let currentFilter = filter;
+
+    if (fieldParts.length > 1) {
+      const [relation, field] = fieldParts;
+      if (!filter["$nested"]) filter["$nested"] = {};
+      if (!filter["$nested"][relation]) filter["$nested"][relation] = {};
+      currentFilter = filter["$nested"][relation];
+      fieldPath = field;
+    }
 
     switch (operator) {
       case "cs":
-        filter[field] = { [Op.like]: `%${value}%` };
+        currentFilter[fieldPath] = { [Op.like]: `%${value}%` };
         break;
       case "sw":
-        filter[field] = { [Op.startsWith]: value };
+        currentFilter[fieldPath] = { [Op.startsWith]: value };
         break;
       case "ew":
-        filter[field] = { [Op.endsWith]: value };
+        currentFilter[fieldPath] = { [Op.endsWith]: value };
         break;
       case "eq":
-        filter[field] = value;
+        currentFilter[fieldPath] = value;
         break;
       case "ne":
-        filter[field] = { [Op.ne]: value };
+        currentFilter[fieldPath] = { [Op.ne]: value };
         break;
       case "lt":
-        filter[field] = { [Op.lt]: Number(value) };
+        currentFilter[fieldPath] = { [Op.lt]: Number(value) };
         break;
       case "le":
-        filter[field] = { [Op.lte]: Number(value) };
+        currentFilter[fieldPath] = { [Op.lte]: Number(value) };
         break;
       case "ge":
-        filter[field] = { [Op.gte]: Number(value) };
+        currentFilter[fieldPath] = { [Op.gte]: Number(value) };
         break;
       case "gt":
-        filter[field] = { [Op.gt]: Number(value) };
+        currentFilter[fieldPath] = { [Op.gt]: Number(value) };
         break;
       case "bt":
         const [min, max] = value.split(",");
-        filter[field] = { [Op.between]: [Number(min), Number(max)] };
+        currentFilter[fieldPath] = { [Op.between]: [Number(min), Number(max)] };
         break;
       case "in":
-        filter[field] = { [Op.in]: value.split(",") };
+        currentFilter[fieldPath] = { [Op.in]: value.split(",") };
         break;
       case "is":
-        filter[field] =
+        currentFilter[fieldPath] =
           value.toLowerCase() === "null" ? null : { [Op.not]: null };
         break;
       // Negated operators
       case "ncs":
-        filter[field] = { [Op.notLike]: `%${value}%` };
+        currentFilter[fieldPath] = { [Op.notLike]: `%${value}%` };
         break;
       case "nsw":
-        filter[field] = { [Op.notStartsWith]: value };
+        currentFilter[fieldPath] = { [Op.notStartsWith]: value };
         break;
       case "new":
-        filter[field] = { [Op.notEndsWith]: value };
+        currentFilter[fieldPath] = { [Op.notEndsWith]: value };
         break;
       case "neq":
-        filter[field] = { [Op.ne]: value };
+        currentFilter[fieldPath] = { [Op.ne]: value };
         break;
       case "nlt":
-        filter[field] = { [Op.gte]: Number(value) };
+        currentFilter[fieldPath] = { [Op.gte]: Number(value) };
         break;
       case "nle":
-        filter[field] = { [Op.gt]: Number(value) };
+        currentFilter[fieldPath] = { [Op.gt]: Number(value) };
         break;
       case "nge":
-        filter[field] = { [Op.lt]: Number(value) };
+        currentFilter[fieldPath] = { [Op.lt]: Number(value) };
         break;
       case "ngt":
-        filter[field] = { [Op.lte]: Number(value) };
+        currentFilter[fieldPath] = { [Op.lte]: Number(value) };
         break;
       case "nbt":
         const [nMin, nMax] = value.split(",");
-        filter[field] = { [Op.notBetween]: [Number(nMin), Number(nMax)] };
+        currentFilter[fieldPath] = {
+          [Op.notBetween]: [Number(nMin), Number(nMax)],
+        };
         break;
       case "nin":
-        filter[field] = { [Op.notIn]: value.split(",") };
+        currentFilter[fieldPath] = { [Op.notIn]: value.split(",") };
         break;
       default:
         break;

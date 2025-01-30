@@ -81,6 +81,21 @@ router.get("/posts", async (req, res) => {
   try {
     const whereClause = buildFilter(req.query);
 
+    if (whereClause && whereClause.$nested) {
+      Object.entries(whereClause.$nested).forEach(([relation, conditions]) => {
+        includeModels.push({
+          model:
+            relation === "comments"
+              ? Comment
+              : relation === "tags"
+              ? Tag
+              : User,
+          where: conditions,
+        });
+      });
+      delete whereClause.$nested;
+    }
+
     const include = req.query.include
       ? req.query.include.split(",")
       : undefined;
